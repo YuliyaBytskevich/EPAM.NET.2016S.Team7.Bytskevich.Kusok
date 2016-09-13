@@ -16,7 +16,7 @@ namespace ToDoClient.Controllers
         private readonly ToDoService todoService = new ToDoService();
         private readonly UserService userService = new UserService();
         private ToDosCollection localCollection = ToDosCollection.GetInstance();
-        private int currentId = 0;
+        private OperationsCollection operationsCollection = OperationsCollection.GetInstance();
 
         /// <summary>
         /// Returns all todo-items for the current user.
@@ -28,9 +28,9 @@ namespace ToDoClient.Controllers
             if (CallsSwitcher.IsFirstCallToGet)
             {
                 CallsSwitcher.IsFirstCallToGet = false;
-                localCollection.Items = todoService.GetItems(userId).ToList();
+                localCollection.Load(todoService.GetItems(userId).ToList());
             }
-            return localCollection.Items;
+            return localCollection.GetAll();
         }
 
         /// <summary>
@@ -40,9 +40,8 @@ namespace ToDoClient.Controllers
         public void Put(ToDoItemViewModel todo)
         {
             todo.UserId = userService.GetOrCreateUser();
-            var toBeEdited = localCollection.Items.Find(x => x.ToDoId == todo.ToDoId);
-            toBeEdited.IsCompleted = todo.IsCompleted;
-            toBeEdited.Name = todo.Name;
+            localCollection.Update(todo);
+            operationsCollection.Add(todo, Operation.Update);
             // todoService.UpdateItem(todo);
             // TODO: update item in local storage
         }
@@ -53,7 +52,8 @@ namespace ToDoClient.Controllers
         /// <param name="id">The todo item identifier.</param>
         public void Delete(int id)
         {
-            localCollection.Items.RemoveAll(x => x.ToDoId == id);
+            localCollection.Delete(id);
+            operationsCollection.Add(new ToDoItemViewModel() {ToDoId = id}, Operation.Delete);
             //todoService.DeleteItem(id);
             // TODO: delete from local storage
         }
@@ -65,7 +65,8 @@ namespace ToDoClient.Controllers
         public void Post(ToDoItemViewModel todo)
         {
             todo.UserId = userService.GetOrCreateUser();
-            localCollection.Items.Add(todo);
+            localCollection.Add(todo);
+            operationsCollection.Add(todo, Operation.Create);
             //todoService.CreateItem(todo);
             // TODO: create new item in local storage
         }
