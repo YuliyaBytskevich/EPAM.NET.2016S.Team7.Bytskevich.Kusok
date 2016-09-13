@@ -31,8 +31,16 @@ namespace ToDoClient.Infrastructure
 
         public void Load(IList<ToDoItemViewModel> items)
         {
+            var existItems = _items;
             _items = items.ToList();
-            _lastId = _items.Max(x => x.ToDoId);
+            if (_items.Count > 0)
+            {
+                _lastId = _items.Max(x => x.ToDoId);
+            }
+            foreach (var existItem in existItems)
+            {
+                this.Add(existItem);
+            }
         }
 
         public void Add(ToDoItemViewModel item)

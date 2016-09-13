@@ -25,7 +25,7 @@ namespace ToDoClient.Infrastructure
         private OperationsCollection()
         {
             _items = new List<ToDoOperation>();
-            _fileName = "operations.xml";
+            _fileName = @"D:\operations.xml";
             // _fileName = ConfigurationManager.AppSettings["LocalFilePath"];
         }
 
@@ -37,14 +37,25 @@ namespace ToDoClient.Infrastructure
                     _items.RemoveAll(x => x.Item.ToDoId == item.ToDoId && x.Operation == Operation.Create);
                 if (countRemovedItems > 0)
                 {
-                    operation = Operation.Create;
+                    _items.Add(new ToDoOperation() {Item = item, Operation = Operation.Create});
+                }
+                else
+                {
+                    _items.Add(new ToDoOperation() { Item = item, Operation = Operation.Update });
                 }
             }
-            if (operation == Operation.Delete)
+            else if (operation == Operation.Delete)
             {
-                _items.RemoveAll(x => x.Item.ToDoId == item.ToDoId); // x.Operation == Operation.Create || Operations.Update
+                int countRemovedItems = _items.RemoveAll(x => x.Item.ToDoId == item.ToDoId); // x.Operation == Operation.Create || Operations.Update
+                if (countRemovedItems == 0)
+                {
+                    _items.Add(new ToDoOperation() { Item = item, Operation = Operation.Delete });
+                }
             }
-            _items.Add(new ToDoOperation() {Item = item, Operation = operation});
+            else
+            {
+                _items.Add(new ToDoOperation() {Item = item, Operation = operation});
+            }
 
 
             using (FileStream s = File.OpenWrite(_fileName))
