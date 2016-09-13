@@ -7,7 +7,7 @@
         var tr = $("<tr data-id='" + obj.ToDoId + "'></tr>");
         tr.append("<td><input type='checkbox' class='completed' " + (obj.IsCompleted ? "checked" : "") + "/></td>");
         tr.append("<td class='name' >" + obj.Name + "</td>");
-        tr.append("<td><input type='button' class='delete-button' value='Delete' /></td>");
+        tr.append("<td><button class='delete'>Delete</button></td>");
         $(parentSelector).append(tr);
     }
 
@@ -82,7 +82,7 @@
 $(function () {
     // add new task button click handler
     $("#newCreate").click(function() {
-        var isCompleted = $('#newCompleted')[0].checked;
+        var isCompleted = false;
         var name = $('#newName')[0].value;
 
         tasksManager.createTask(isCompleted, name)
