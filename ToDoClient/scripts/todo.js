@@ -68,13 +68,21 @@
         });
     };
 
+    var syncTasks = function() {
+        return $.ajax({
+            url: "/api/todos/",
+            type: 'PATCH'
+        });
+    }
+
     // returns public interface of task manager.
     return {
         loadTasks: loadTasks,
         displayTasks: displayTasks,
         createTask: createTask,
         deleteTask: deleteTask,
-        updateTask: updateTask
+        updateTask: updateTask,
+        syncTasks: syncTasks
     };
 }();
 
@@ -107,13 +115,17 @@ $(function () {
     });
 
     // bind delete button click for future rows
-    $('#tasks > tbody').on('click', '.delete-button', function() {
+    $('#tasks > tbody').on('click', '.delete', function() {
         var taskId = $(this).parent().parent().attr("data-id");
         tasksManager.deleteTask(taskId)
             .then(tasksManager.loadTasks)
             .done(function(tasks) {
                 tasksManager.displayTasks("#tasks > tbody", tasks);
             });
+    });
+
+    $("#sync").click(function () {
+        tasksManager.syncTasks();
     });
 
     // load all tasks on startup

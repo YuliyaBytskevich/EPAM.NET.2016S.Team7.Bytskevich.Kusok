@@ -7,6 +7,7 @@ using System.Runtime.Remoting.Channels;
 using System.Web;
 using System.Xml.Serialization;
 using ToDoClient.Models;
+using ToDoClient.Services;
 
 namespace ToDoClient.Infrastructure
 {
@@ -15,7 +16,7 @@ namespace ToDoClient.Infrastructure
         private List<ToDoOperation> _items;
         private static OperationsCollection _instance;
         private readonly string _fileName;
-        private XmlSerializer _formatter = new XmlSerializer(typeof(List<ToDoOperation>));
+        private readonly XmlSerializer _formatter = new XmlSerializer(typeof(List<ToDoOperation>));
 
         public static OperationsCollection GetInstance()
         {
@@ -25,8 +26,8 @@ namespace ToDoClient.Infrastructure
         private OperationsCollection()
         {
             _items = new List<ToDoOperation>();
-            _fileName = @"D:\operations.xml";
-            // _fileName = ConfigurationManager.AppSettings["LocalFilePath"];
+            // ACHTUNG! HARDCODE'S HERE!
+            _fileName = "E:/operations.xml";
         }
 
         public void Add(ToDoItemViewModel item, Operation operation)
@@ -56,32 +57,54 @@ namespace ToDoClient.Infrastructure
             {
                 _items.Add(new ToDoOperation() {Item = item, Operation = operation});
             }
-
-
-            using (FileStream s = File.OpenWrite(_fileName))
-            {
-                _formatter.Serialize(s, _items);
-            }
+            RefreshLocalFile(_items);
         }
 
-        public void Delete(ToDoItemViewModel item, Operation operation)
+        private void RemoveCommandFromFile(ToDoOperation command)
         {
-            _items.RemoveAll(x => x.Item == item && x.Operation == operation);
-            using (FileStream s = File.OpenWrite(_fileName))
+            var actual = _items.Except(new List<ToDoOperation>() { command });
+            RefreshLocalFile(actual.ToList());
+        }
+
+        public void Sync(ToDoService remote)
+        {
+            foreach (var command in _items)
             {
-                _formatter.Serialize(s, _items);
+                switch (command.Operation)
+                {
+                    case Operation.Create:
+                        remote.CreateItem(command.Item);
+                        break;
+                    case Operation.Update:
+                        remote.UpdateItem(command.Item);
+                        break;
+                    case Operation.Delete:
+                        remote.DeleteItem(command.Item.ToDoId);
+                        break;
+                }
+                RemoveCommandFromFile(command);
+            }
+            var commandsInFile = File.ReadAllText(_fileName);
+            if (!string.IsNullOrEmpty(commandsInFile))
+            {
+                LoadCommandsFromLocalFile();
             }
         }
 
-        public void RefreshLocalFile()
+        public bool IsNotEmpty()
+        {
+            return _items.Any();
+        }
+
+        private void RefreshLocalFile(List<ToDoOperation> actialList)
         {
             using (FileStream s = File.Create(_fileName))
             {
-                _formatter.Serialize(s, _items);
+                _formatter.Serialize(s, actialList);
             }
         }
 
-        public void LoadFromLocalFile()
+        public void LoadCommandsFromLocalFile()
         {
             using (Stream s = new FileStream(_fileName, FileMode.Open))
             {

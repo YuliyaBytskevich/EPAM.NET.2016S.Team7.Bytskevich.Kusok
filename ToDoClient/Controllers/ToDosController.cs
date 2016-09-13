@@ -42,8 +42,6 @@ namespace ToDoClient.Controllers
             todo.UserId = userService.GetOrCreateUser();
             localCollection.Update(todo);
             operationsCollection.Add(todo, Operation.Update);
-            // todoService.UpdateItem(todo);
-            // TODO: update item in local storage
         }
 
         /// <summary>
@@ -54,8 +52,6 @@ namespace ToDoClient.Controllers
         {
             localCollection.Delete(id);
             operationsCollection.Add(new ToDoItemViewModel() {ToDoId = id}, Operation.Delete);
-            //todoService.DeleteItem(id);
-            // TODO: delete from local storage
         }
 
         /// <summary>
@@ -67,8 +63,15 @@ namespace ToDoClient.Controllers
             todo.UserId = userService.GetOrCreateUser();
             localCollection.Add(todo);
             operationsCollection.Add(todo, Operation.Create);
-            //todoService.CreateItem(todo);
-            // TODO: create new item in local storage
+        }
+
+        public void Patch()
+        {
+            Debug.WriteLine(">>> PATCH called");
+            if (operationsCollection.IsNotEmpty())
+            {
+                operationsCollection.Sync(todoService);
+            }          
         }
     }
 }
