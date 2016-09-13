@@ -1,107 +1,153 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.IO;
-using System.Linq;
-using System.Runtime.Remoting.Channels;
-using System.Web;
+using System.Threading;
 using System.Xml.Serialization;
 using ToDoClient.Models;
 
 namespace ToDoClient.Infrastructure
 {
+    /// <summary>
+    /// Works with list of operations from local collection
+    /// </summary>
     public class OperationsCollection
     {
-        private List<ToDoOperation> _items;
-        private static OperationsCollection _instance;
-        private readonly string _fileName;
-        private XmlSerializer _formatter = new XmlSerializer(typeof(List<ToDoOperation>));
-
-        public static OperationsCollection GetInstance()
-        {
-            return _instance ?? (_instance = new OperationsCollection());
-        }
+        private static OperationsCollection instance;
+        private readonly ReaderWriterLockSlim readerWriterLock = new ReaderWriterLockSlim();
+        private readonly string fileName;
+        private List<ToDoOperation> items;
+        private XmlSerializer formatter = new XmlSerializer(typeof(List<ToDoOperation>));
 
         private OperationsCollection()
         {
-            _items = new List<ToDoOperation>();
-            _fileName = @"D:\operations.xml";
+            this.items = new List<ToDoOperation>();
+            this.fileName = @"D:\operations.xml";
             // _fileName = ConfigurationManager.AppSettings["LocalFilePath"];
         }
 
+        /// <summary>
+        /// Gets the instance of OperationsCollection.
+        /// </summary>
+        /// <returns>The instance of OperationsCollection</returns>
+        public static OperationsCollection GetInstance()
+        {
+            return instance ?? (instance = new OperationsCollection());
+        }
+
+        /// <summary>
+        /// Adds a operation.
+        /// </summary>
+        /// <param name="item">The todo item.</param>
+        /// <param name="operation">The operation.</param>
         public void Add(ToDoItemViewModel item, Operation operation)
         {
-            if (operation == Operation.Update)
+            this.readerWriterLock.EnterWriteLock();
+            try
             {
-                int countRemovedItems =
-                    _items.RemoveAll(x => x.Item.ToDoId == item.ToDoId && x.Operation == Operation.Create);
-                if (countRemovedItems > 0)
+                if (operation == Operation.Update)
                 {
-                    _items.Add(new ToDoOperation() {Item = item, Operation = Operation.Create});
+                    int countRemovedItems =
+                        this.items.RemoveAll(x => x.Item.ToDoId == item.ToDoId && x.Operation == Operation.Create);
+                    if (countRemovedItems > 0)
+                    {
+                        this.items.Add(new ToDoOperation() { Item = item, Operation = Operation.Create });
+                    }
+                    else
+                    {
+                        this.items.Add(new ToDoOperation() { Item = item, Operation = Operation.Update });
+                    }
+                }
+                else if (operation == Operation.Delete)
+                {
+                    int countRemovedItems = this.items.RemoveAll(x => x.Item.ToDoId == item.ToDoId); // x.Operation == Operation.Create || Operations.Update
+                    if (countRemovedItems == 0)
+                    {
+                        this.items.Add(new ToDoOperation() { Item = item, Operation = Operation.Delete });
+                    }
                 }
                 else
                 {
-                    _items.Add(new ToDoOperation() { Item = item, Operation = Operation.Update });
+                    this.items.Add(new ToDoOperation() { Item = item, Operation = operation });
                 }
-            }
-            else if (operation == Operation.Delete)
-            {
-                int countRemovedItems = _items.RemoveAll(x => x.Item.ToDoId == item.ToDoId); // x.Operation == Operation.Create || Operations.Update
-                if (countRemovedItems == 0)
+                using (FileStream s = File.OpenWrite(this.fileName))
                 {
-                    _items.Add(new ToDoOperation() { Item = item, Operation = Operation.Delete });
+                    this.formatter.Serialize(s, this.items);
                 }
             }
-            else
+            finally
             {
-                _items.Add(new ToDoOperation() {Item = item, Operation = operation});
-            }
-
-
-            using (FileStream s = File.OpenWrite(_fileName))
-            {
-                _formatter.Serialize(s, _items);
+                this.readerWriterLock.ExitWriteLock();
             }
         }
 
+        /// <summary>
+        /// Deletes the specified item.
+        /// </summary>
+        /// <param name="item">The todo item to delete.</param>
+        /// <param name="operation">The operation to delete.</param>
         public void Delete(ToDoItemViewModel item, Operation operation)
         {
-            _items.RemoveAll(x => x.Item == item && x.Operation == operation);
-            using (FileStream s = File.OpenWrite(_fileName))
+            this.readerWriterLock.EnterWriteLock();
+            try
             {
-                _formatter.Serialize(s, _items);
+                this.items.RemoveAll(x => x.Item == item && x.Operation == operation);
+                using (FileStream s = File.OpenWrite(this.fileName))
+                {
+                    this.formatter.Serialize(s, this.items);
+                }
+            }
+            finally
+            {
+                this.readerWriterLock.ExitWriteLock();
             }
         }
 
+        /// <summary>
+        /// Refreshes the local file.
+        /// </summary>
         public void RefreshLocalFile()
         {
-            using (FileStream s = File.Create(_fileName))
+            this.readerWriterLock.EnterWriteLock();
+            try
             {
-                _formatter.Serialize(s, _items);
+                using (FileStream s = File.Create(this.fileName))
+                {
+                    this.formatter.Serialize(s, this.items);
+                }
+            }
+            finally
+            {
+                this.readerWriterLock.ExitWriteLock();
             }
         }
 
+        /// <summary>
+        /// Loads from local file.
+        /// </summary>
         public void LoadFromLocalFile()
         {
-            using (Stream s = new FileStream(_fileName, FileMode.Open))
+            this.readerWriterLock.EnterWriteLock();
+            try
             {
-                _items = (List<ToDoOperation>)_formatter.Deserialize(s);
+                using (Stream s = new FileStream(this.fileName, FileMode.Open))
+                {
+                    this.items = (List<ToDoOperation>)this.formatter.Deserialize(s);
+                }
+            }
+            finally
+            {
+                this.readerWriterLock.ExitWriteLock();
             }
         }
-        
+
+        /// <summary>
+        /// Represent todo item with operation. Uses in list.
+        /// </summary>
         [Serializable]
         public struct ToDoOperation
         {
             public ToDoItemViewModel Item;
             public Operation Operation;
         }
-    }
-
-    public enum Operation
-    {
-        GetAll,
-        Create,
-        Update,
-        Delete
     }
 }

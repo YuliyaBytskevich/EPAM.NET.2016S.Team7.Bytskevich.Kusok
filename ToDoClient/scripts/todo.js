@@ -107,7 +107,7 @@ $(function () {
     });
 
     // bind delete button click for future rows
-    $('#tasks > tbody').on('click', '.delete-button', function() {
+    $('#tasks > tbody').on('click', '.delete', function() {
         var taskId = $(this).parent().parent().attr("data-id");
         tasksManager.deleteTask(taskId)
             .then(tasksManager.loadTasks)
