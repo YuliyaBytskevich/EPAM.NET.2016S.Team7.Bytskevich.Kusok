@@ -1,5 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Web.Http;
+using ToDoClient.Infrastructure;
 using ToDoClient.Models;
 using ToDoClient.Services;
 
@@ -12,6 +15,8 @@ namespace ToDoClient.Controllers
     {
         private readonly ToDoService todoService = new ToDoService();
         private readonly UserService userService = new UserService();
+        private ToDosCollection localCollection = ToDosCollection.GetInstance();
+        private int currentId;
 
         /// <summary>
         /// Returns all todo-items for the current user.
@@ -20,7 +25,12 @@ namespace ToDoClient.Controllers
         public IList<ToDoItemViewModel> Get()
         {
             var userId = userService.GetOrCreateUser();
-            return todoService.GetItems(userId);
+            if (CallsSwitcher.IsFirstCallToGet)
+            {
+                CallsSwitcher.IsFirstCallToGet = false;
+                localCollection.Items = todoService.GetItems(userId).ToList();
+            }
+            return localCollection.Items;
         }
 
         /// <summary>
@@ -30,7 +40,11 @@ namespace ToDoClient.Controllers
         public void Put(ToDoItemViewModel todo)
         {
             todo.UserId = userService.GetOrCreateUser();
-            todoService.UpdateItem(todo);
+            var toBeEdited = localCollection.Items.Find(x => x.ToDoId == todo.ToDoId);
+            toBeEdited.IsCompleted = todo.IsCompleted;
+            toBeEdited.Name = todo.Name;
+            // todoService.UpdateItem(todo);
+            // TODO: update item in local storage
         }
 
         /// <summary>
@@ -39,7 +53,9 @@ namespace ToDoClient.Controllers
         /// <param name="id">The todo item identifier.</param>
         public void Delete(int id)
         {
-            todoService.DeleteItem(id);
+            localCollection.Items.RemoveAll(x => x.ToDoId == id);
+            //todoService.DeleteItem(id);
+            // TODO: delete from local storage
         }
 
         /// <summary>
@@ -49,7 +65,10 @@ namespace ToDoClient.Controllers
         public void Post(ToDoItemViewModel todo)
         {
             todo.UserId = userService.GetOrCreateUser();
-            todoService.CreateItem(todo);
+            localCollection.Items.Add(todo);
+            //todoService.CreateItem(todo);
+            // TODO: create new item in local storage
         }
     }
 }
+
