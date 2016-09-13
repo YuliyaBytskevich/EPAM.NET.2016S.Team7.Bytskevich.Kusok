@@ -16,7 +16,8 @@ namespace ToDoClient.Controllers
         private readonly ToDoService todoService = new ToDoService();
         private readonly UserService userService = new UserService();
         private ToDosCollection localCollection = ToDosCollection.GetInstance();
-        
+        private OperationsCollection operationsCollection = OperationsCollection.GetInstance();
+
         /// <summary>
         /// Returns all todo-items for the current user.
         /// </summary>
@@ -40,6 +41,7 @@ namespace ToDoClient.Controllers
         {
             todo.UserId = userService.GetOrCreateUser();
             localCollection.Update(todo);
+            operationsCollection.Add(todo, Operation.Update);
             // todoService.UpdateItem(todo);
             // TODO: update item in local storage
         }
@@ -51,6 +53,7 @@ namespace ToDoClient.Controllers
         public void Delete(int id)
         {
             localCollection.Delete(id);
+            operationsCollection.Add(new ToDoItemViewModel() {ToDoId = id}, Operation.Delete);
             //todoService.DeleteItem(id);
             // TODO: delete from local storage
         }
@@ -62,8 +65,8 @@ namespace ToDoClient.Controllers
         public void Post(ToDoItemViewModel todo)
         {
             todo.UserId = userService.GetOrCreateUser();
-            
             localCollection.Add(todo);
+            operationsCollection.Add(todo, Operation.Create);
             //todoService.CreateItem(todo);
             // TODO: create new item in local storage
         }
