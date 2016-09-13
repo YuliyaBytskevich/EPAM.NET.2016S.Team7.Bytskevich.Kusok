@@ -16,7 +16,7 @@ namespace ToDoClient.Controllers
         private readonly ToDoService todoService = new ToDoService();
         private readonly UserService userService = new UserService();
         private ToDosCollection localCollection = ToDosCollection.GetInstance();
-        private int currentId;
+        private int currentId = 0;
 
         /// <summary>
         /// Returns all todo-items for the current user.
