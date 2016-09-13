@@ -131,6 +131,7 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Infrastructure\CallsSwitcher.cs" />
+    <Compile Include="Infrastructure\Operation.cs" />
     <Compile Include="Infrastructure\OperationsCollection.cs" />
     <Compile Include="Infrastructure\ToDosCollection.cs" />
     <Compile Include="Models\ToDoViewModel.cs" />
