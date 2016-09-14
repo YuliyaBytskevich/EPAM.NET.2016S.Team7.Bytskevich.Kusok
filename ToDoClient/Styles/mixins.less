@@ -6,13 +6,16 @@
 }
 
 .set-div-parameters(@width, @height, @margin, @padding){
-	width: @width;
-	height: @height;
-	margin: @margin;	
-	padding: @padding;
+	.set-size(@width, @height);
+	.fields(@margin, @padding);
 }
 
-.set-zombie-block-size(@width, @height){
+.set-size(@width, @height){
 	width: @width;
 	height: @height;
+}
+
+.fields(@margin, @padding){
+    margin: @margin;	
+	padding: @padding;
 }

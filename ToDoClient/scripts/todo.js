@@ -21,14 +21,14 @@
         $.each(tasks, function(i, item) {
             appendRow(parentSelector, item);
         });
-        $(".waiting").fadeOut();
+        $("#waitLoading").fadeOut();
     };
 
     // starts loading tasks from server.
     // @returns a promise.
     var loadTasks = function () {
         if (isFirstLoad) {
-            $(".waiting").fadeIn();
+            $("#waitLoading").fadeIn();
             isFirstLoad = false;
         }
         return $.getJSON("/api/todos");
@@ -56,7 +56,7 @@
         {
             url: "/api/todos",
             type: "PUT",
-            contentType: 'application/json',
+            contentType: "application/json",
             data: JSON.stringify({
                 ToDoId: id,
                 IsCompleted: isCompleted,
@@ -71,16 +71,17 @@
     var deleteTask = function (taskId) {
         return $.ajax({
             url: "/api/todos/" + taskId,
-            type: 'DELETE'
+            type: "DELETE"
         });
     };
 
-    var syncTasks = function () {
-        $(".waiting p").text("synchronizing ...");
-        $(".waiting").fadeIn();
+    var syncTasks = function (button) {
+        $("#waitSyncing").fadeIn();
+        $("#sync").text("Syncing ...");
+        $("#sync").prop("disabled", true);
         return $.ajax({
             url: "/api/todos/",
-            type: 'PATCH'
+            type: "PATCH"
         });
     }
 
@@ -97,47 +98,63 @@
 
 
 $(function () {
-    // add new task button click handler
-    $("#newCreate").click(function() {
-        var isCompleted = false;
-        var name = $('#newName')[0].value;
 
-        tasksManager.createTask(isCompleted, name)
+    var $createButton = $("#newCreate");
+    var $nameInput = $("#newName");
+    var $todosTable = $("#tasks > tbody");
+    var $syncButton = $("#sync");
+    var $counter = $(".global-container p");
+    var commandsCounter = 0;
+
+    // add new task button click handler
+    $createButton.click(function () {
+        var name = $nameInput[0].value;
+
+        tasksManager.createTask(false, name)
             .then(tasksManager.loadTasks)
             .done(function(tasks) {
                 tasksManager.displayTasks("#tasks > tbody", tasks);
+                commandsCounter++;
+                $counter.text("unsynced changes: " + commandsCounter);
             });
     });
 
     // bind update task checkbox click handler
-    $("#tasks > tbody").on('change', '.completed', function () {
+    $todosTable.on("change", ".completed", function () {
         var tr = $(this).parent().parent();
         var taskId = tr.attr("data-id");
-        var isCompleted = tr.find('.completed')[0].checked;
-        var name = tr.find('.name').text();
+        var isCompleted = tr.find(".completed")[0].checked;
+        var name = tr.find(".name").text();
         
         tasksManager.updateTask(taskId, isCompleted, name)
             .then(tasksManager.loadTasks)
             .done(function (tasks) {
                 tasksManager.displayTasks("#tasks > tbody", tasks);
+                commandsCounter++;
+                $counter.text("unsynced changes: " + commandsCounter);
             });
     });
 
     // bind delete button click for future rows
-    $('#tasks > tbody').on('click', '.delete', function() {
+    $todosTable.on("click", ".delete", function () {
         var taskId = $(this).parent().parent().attr("data-id");
         tasksManager.deleteTask(taskId)
             .then(tasksManager.loadTasks)
             .done(function(tasks) {
                 tasksManager.displayTasks("#tasks > tbody", tasks);
+                commandsCounter++;
+                $counter.text("unsynced changes: " + commandsCounter);
             });
     });
 
-    $("#sync").click(function () {
+    $syncButton.click(function () {
         tasksManager.syncTasks()
             .done(function() {
-                $(".waiting").fadeOut();
-                $(".waiting p").text("loading your to-do list ...");
+                $("#waitSyncing").fadeOut();
+                $("#sync").text("Synchronize");
+                $syncButton.prop("disabled", false);
+                commandsCounter = 0;
+                $counter.text("unsynced changes: 0");
             });
     });
 

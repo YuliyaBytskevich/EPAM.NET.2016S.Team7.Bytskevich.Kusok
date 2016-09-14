@@ -2,7 +2,7 @@
 @import "mixins";
 
 html {
-     min-height:100%;
+     min-height: 100%;
      position: relative;
 }
 
@@ -15,15 +15,12 @@ body {
     margin: 0 0 70px 0;
 
     .header {
-        width: 100%;
-        height: 100px;
+        .set-size(100%, 100px);
         background-color: @color-header-bg;
         color: @color-header-text;
-       // border: 15px solid @color-footer-bg;
 
         .text {
-            margin: 0 auto;
-            padding: 25px;
+            .fields(0 auto, 25px);
             text-align: center;
             font-size: 40px;
         }
@@ -31,84 +28,87 @@ body {
 
     .content-container {
         .set-div-parameters(1000px, auto, 7% auto, 20px);
-        background-color: 	rgba(224, 194, 133, 0.4);
+        background-color: @color-content-bg;
         border-radius: 7px;
-        border: 3px solid @color-content-bg;
+        border: 3px solid @color-content-border;
         box-shadow: 0 0 10px 5px rgba(221, 221, 221, 1);
 
         h4 {
             margin: 0 0 10px 0;
         } 
 
-        .waiting {
+        #waitLoading {
             position: fixed;
             top: 40%;
             left: 45%;
             width: 220px;
-            margin: 0 auto;
             display: none;
 
             p {
-                margin: 0;
-                padding: 0;
+                font-size: 20px;
             }
+        }
+
+        div {
+            display: inline-block;
         }
     }
 
     .content-box {
-            border-radius: 7px;
-            border: 3px solid @color-content-bg;
-            .set-div-parameters(980px, auto, 0 0 15px 0, 10px);
+        border-radius: 7px;
+        border: 3px solid @color-content-border;
+        .set-div-parameters(980px, auto, 0 0 15px 0, 10px);
 
-            &.new-note{
-                .set-div-parameters(980px, 70px, 0 0 10px 0, 10px 10px 15px 10px);
+        &.new-note{
+            .set-div-parameters(980px, 70px, 0 0 10px 0, 10px 10px 15px 10px);
 
-                #newName {
-                    .set-div-parameters(400px, 30px, 0, 0);
-                    padding: 3px 7px;
-                    font-size: 18px;
-                    max-height: 100px;
-                    border: none;
-                    background-color: @color-input;
-                    overflow: hidden;
-                    word-wrap: break-word;
-                }
+            #newName {
+                .set-div-parameters(400px, 30px, 0, 3px 7px);
+                font-size: 18px;
+                max-height: 100px;
+                border: none;
+                background-color: @color-input;
             }
+        }
 
-            &.list {
-                margin: 0;
-                    
-                #tasks {
-                    width: 980px;
+        &.list {
+            margin: 0;
+                  
+            #tasks {
+                width: 980px;
 
-                    th, td {
-                         padding: 7px;
-                        text-align: left;
-                        border-bottom: 1px solid #ddd;
+                th, td {
+                    padding: 7px;
+                    text-align: left;
+                    border-bottom: 1px solid #ddd;
 
-                        &:first-child {
-                            width: 30px;
-                            text-align: right;
-                        }
+                    &:first-child {
+                        width: 30px;
+                        text-align: right;
+                    }
                         
-                        &:last-child {
-                            width: 70px;
-                        }
-                    }
-
-                    .completed {
-                        height: 20px;
-                        width: 20px;
+                    &:last-child {
+                        width: 70px;
                     }
                 }
+
+                .completed {
+                    .set-size(20px, 20px);
+                }
             }
+        }
+    }
+
+    p {
+        .fields(0, 5px 0);
+        font-size: 16px;
     }
    
     button {
         border: none;
-        color: #ffffff;
         font-size: 18px;
-        background: #ad8c49;
+        background: @color-button-light-bg;
+        color: @color-button-text;
         padding: 7px 30px;
         text-decoration: none;
 
@@ -118,7 +118,7 @@ body {
 
         &.delete {
             font-size: 14px;
-            background-color: #A18657;
+            background-color: @color-button-dark-bg;
         }
 
         &#sync{
@@ -126,14 +126,17 @@ body {
         }
 
         &:hover {
-            background: #E3CB7D;
+            background: @color-button-hover;
             text-decoration: none;
         }
     }
 
+    #waitSyncing {
+        display: none;
+    }
+
     .footer {
-	    width: 99%;
-	    height: 70px;
+        .set-size(99%, 70px);
 	    position: absolute;
 	    bottom: 0;
         background-color: @color-footer-bg;

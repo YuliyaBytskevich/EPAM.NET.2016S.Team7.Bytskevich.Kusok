@@ -14,19 +14,21 @@
 
 <body>
 <div class="global-container">
+
     <div class="header">
         <div class="text">MANAGE YOUR TIME! USE TODO LIST</div>
     </div>
+
     <div class="content-container">
 
-        <div class="waiting">
+        <div id="waitLoading">
             <p>loading your to-do list ...</p>
             <img src="img/wait.gif"/>
         </div>
-        
+
         <div class="content-box new-note">
             <h4>CREATE NEW NOTE:</h4>
-            <input type='text' id="newName" />
+            <input type='text' id="newName"/>
             <button id="newCreate">Create</button>
         </div>
 
@@ -44,12 +46,20 @@
             </table>
         </div>
 
-        <button id="sync">Synchronize</button>
+        <div>
+            <button id="sync">Synchronize</button>
+            <div>
+                <img id="waitSyncing" src="img/wait5.gif" alt=""/>
+            </div>     
+        </div>     
+        <p>unsynced changes: 0</p>
 
     </div>
+
     <div class="footer">
         <div class="content">.NET & JS Lab - 2016</div>
     </div>
+
 </div>
 
 

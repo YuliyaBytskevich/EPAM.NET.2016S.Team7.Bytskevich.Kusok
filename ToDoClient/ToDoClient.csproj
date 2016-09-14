@@ -113,6 +113,9 @@
     <Content Include="Global.asax" />
     <Content Include="img\bg-top.jpg" />
     <Content Include="img\wait.gif" />
+    <Content Include="img\wait2.gif" />
+    <Content Include="img\wait4.gif" />
+    <Content Include="img\wait5.gif" />
     <Content Include="index.html" />
     <Content Include="scripts\ai.0.22.9-build00167.js" />
     <Content Include="scripts\ai.0.22.9-build00167.min.js" />
@@ -123,6 +126,8 @@
     <Content Include="scripts\jquery-3.1.0.slim.js" />
     <Content Include="scripts\jquery-3.1.0.slim.min.js" />
     <Content Include="scripts\todo.js" />
+    <Content Include="Styles\global_variables.css" />
+    <Content Include="Styles\mixins.css" />
     <Content Include="Styles\site.css" />
     <Content Include="Web.config" />
   </ItemGroup>
@@ -132,9 +137,10 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
-    <Compile Include="Infrastructure\CallsSwitcher.cs" />
+    <Compile Include="Infrastructure\Command.cs" />
+    <Compile Include="Infrastructure\LocalToDoService.cs" />
     <Compile Include="Infrastructure\Operation.cs" />
-    <Compile Include="Infrastructure\OperationsCollection.cs" />
+    <Compile Include="Infrastructure\CommandsCollection.cs" />
     <Compile Include="Infrastructure\ToDosCollection.cs" />
     <Compile Include="Models\ToDoViewModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -148,6 +154,9 @@
     </Content>
     <Content Include="scripts\jquery-3.1.0.min.map" />
     <Content Include="scripts\jquery-3.1.0.slim.min.map" />
+    <Content Include="Styles\site.less" />
+    <Content Include="Styles\global_variables.less" />
+    <Content Include="Styles\mixins.less" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
