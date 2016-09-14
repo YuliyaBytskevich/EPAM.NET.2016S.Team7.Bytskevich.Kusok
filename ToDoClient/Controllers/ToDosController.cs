@@ -67,9 +67,11 @@ namespace ToDoClient.Controllers
             operationsCollection.Add(todo, Operation.Create);
         }
 
+        /// <summary>
+        /// Calls synchronization with remote storage
+        /// </summary>
         public void Patch()
         {
-            Debug.WriteLine(">>> PATCH called");
             if (operationsCollection.IsNotEmpty())
             {
                 operationsCollection.Sync(todoService);

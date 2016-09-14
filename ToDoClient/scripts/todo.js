@@ -75,7 +75,9 @@
         });
     };
 
-    var syncTasks = function() {
+    var syncTasks = function () {
+        $(".waiting p").text("synchronizing ...");
+        $(".waiting").fadeIn();
         return $.ajax({
             url: "/api/todos/",
             type: 'PATCH'
@@ -132,7 +134,11 @@ $(function () {
     });
 
     $("#sync").click(function () {
-        tasksManager.syncTasks();
+        tasksManager.syncTasks()
+            .done(function() {
+                $(".waiting").fadeOut();
+                $(".waiting p").text("loading your to-do list ...");
+            });
     });
 
     // load all tasks on startup

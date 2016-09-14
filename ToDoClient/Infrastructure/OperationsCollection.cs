@@ -20,6 +20,7 @@ namespace ToDoClient.Infrastructure
         private readonly string _fileName;
         private readonly XmlSerializer _formatter = new XmlSerializer(typeof(List<ToDoOperation>));
         private readonly ReaderWriterLockSlim _readerWriterLock = new ReaderWriterLockSlim();
+        private readonly ReaderWriterLockSlim _refreshFileLock = new ReaderWriterLockSlim();
 
         public static OperationsCollection GetInstance()
         {
@@ -45,16 +46,11 @@ namespace ToDoClient.Infrastructure
             {
                 if (operation == Operation.Update)
                 {
-                    int countRemovedItems =
-                        this._items.RemoveAll(x => x.Item.ToDoId == item.ToDoId && x.Operation == Operation.Create);
-                    if (countRemovedItems > 0)
-                    {
-                        this._items.Add(new ToDoOperation() { Item = item, Operation = Operation.Create });
-                    }
-                    else
-                    {
-                        this._items.Add(new ToDoOperation() { Item = item, Operation = Operation.Update });
-                    }
+                    int numOfUnnessesaryCreates = _items.RemoveAll(x => x.Item.ToDoId == item.ToDoId && x.Operation == Operation.Create);
+                    _items.RemoveAll(x => x.Item.ToDoId == item.ToDoId && x.Operation == Operation.Update);
+                    _items.Add(numOfUnnessesaryCreates > 0
+                        ? new ToDoOperation() {Item = item, Operation = Operation.Create}
+                        : new ToDoOperation() {Item = item, Operation = Operation.Update});                   
                 }
                 else if (operation == Operation.Delete)
                 {
@@ -77,47 +73,38 @@ namespace ToDoClient.Infrastructure
         }
 
         /// <summary>
-        /// Removes given command from local file.
-        /// </summary>
-        /// <param name="command">Command to be deleted</param>
-        private void RemoveCommandFromFile(ToDoOperation command)
-        {
-            this._readerWriterLock.EnterWriteLock();
-            try
-            {
-                _actualCopy = _actualCopy.Except(new List<ToDoOperation>() { command }).ToList();
-                RefreshLocalFile(_actualCopy);
-            }
-            finally
-            {
-                this._readerWriterLock.ExitWriteLock();
-            }   
-        }
-
-        /// <summary>
         /// Sinchronization with remote cloud.
         /// </summary>
         /// <param name="remote">Service that processes requests to a remote cloud.</param>
         public void Sync(ToDoService remote)
         {
-            var temp = new ToDoOperation[_items.Count];
-            _items.CopyTo(temp);
-            _actualCopy = temp.ToList();
-            foreach (var command in _items)
+            _readerWriterLock.EnterWriteLock();
+            try
             {
-                switch (command.Operation)
+                var temp = new ToDoOperation[_items.Count];
+                _items.CopyTo(temp);
+                _actualCopy = temp.ToList();
+                foreach (var command in _items)
                 {
-                    case Operation.Create:
-                        remote.CreateItem(command.Item);
-                        break;
-                    case Operation.Update:
-                        remote.UpdateItem(command.Item);
-                        break;
-                    case Operation.Delete:
-                        remote.DeleteItem(command.Item.ToDoId);
-                        break;
+                    switch (command.Operation)
+                    {
+                        case Operation.Create:
+                            remote.CreateItem(command.Item);
+                            break;
+                        case Operation.Update:
+                            remote.UpdateItem(command.Item);
+                            break;
+                        case Operation.Delete:
+                            remote.DeleteItem(command.Item.ToDoId);
+                            break;
+                    }
+                    _actualCopy = _actualCopy.Except(new List<ToDoOperation>() { command }).ToList();
+                    RefreshLocalFile(_actualCopy);
                 }
-                RemoveCommandFromFile(command);
+            }
+            finally
+            {
+                _readerWriterLock.ExitWriteLock();
             }
         }
 
