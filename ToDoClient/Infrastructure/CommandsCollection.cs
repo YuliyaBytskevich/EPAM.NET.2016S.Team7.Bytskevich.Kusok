@@ -101,6 +101,7 @@ namespace ToDoClient.Infrastructure
                 remainingCommands.RemoveAll(x => x.Item.ToDoId == command.Item.ToDoId && x.Operation == command.Operation);
                 RefreshLocalFile(tempFileName, remainingCommands);
             }
+
             var notSyncedCommands = new List<Command>();
             using (Stream s = new FileStream(tempFileName, FileMode.Open))
             {
@@ -116,6 +117,30 @@ namespace ToDoClient.Infrastructure
                 }
                 finally
                 {
+                    modifyCommandsLock.ExitWriteLock();
+                }
+            }
+
+            var unsyncedUpdatesAndDeletes = commands.Where(x => x.Operation == Operation.Update || x.Operation == Operation.Delete);
+            if (unsyncedUpdatesAndDeletes.Any())
+            {
+                var fromServerCommands = remote.GetItems(unsyncedUpdatesAndDeletes.First().Item.UserId);
+                modifyCommandsLock.EnterWriteLock();
+                try
+                {
+                    foreach (var command in unsyncedUpdatesAndDeletes)
+                    {
+                        var matching = fromServerCommands.LastOrDefault(x => x.Name.Trim() == command.Item.Name && x.UserId == command.Item.UserId);
+                        if (matching != null)
+                        {
+                            command.Item.ToDoId = matching.ToDoId;            
+                            fromServerCommands.Remove(matching);
+                        }
+                    }
+                }
+                finally
+                {
+                    RefreshLocalFile(fileName, commands);
                     modifyCommandsLock.ExitWriteLock();
                 }
             }

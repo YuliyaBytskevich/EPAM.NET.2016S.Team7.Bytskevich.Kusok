@@ -10,20 +10,20 @@ namespace ToDoClient.Infrastructure
 {
     public class ToDosCollection
     {
-        private List<ToDoItemViewModel> _items;
-        private static ToDosCollection _instance;
-        private int _lastId;
-        private readonly ReaderWriterLockSlim _readerWriterLock = new ReaderWriterLockSlim();
+        private List<ToDoItemViewModel> items;
+        private static ToDosCollection instance;
+        private int tempId;
+        private readonly ReaderWriterLockSlim readerWriterLock = new ReaderWriterLockSlim();
 
         public static ToDosCollection GetInstance()
         {
-            return _instance ?? (_instance = new ToDosCollection());
+            return instance ?? (instance = new ToDosCollection());
         }
 
         private ToDosCollection()
         {
-            _items = new List<ToDoItemViewModel>();
-            _lastId = 0;
+            items = new List<ToDoItemViewModel>();
+            tempId = 0;
         }
 
         /// <summary>
@@ -32,14 +32,14 @@ namespace ToDoClient.Infrastructure
         /// <returns>The list of todos.</returns>
         public IList<ToDoItemViewModel> GetAll()
         {
-            this._readerWriterLock.EnterReadLock();
+            this.readerWriterLock.EnterReadLock();
             try
             {
-                return this._items;
+                return this.items;
             }
             finally
             {
-                this._readerWriterLock.ExitReadLock();
+                this.readerWriterLock.ExitReadLock();
             }
         }
 
@@ -51,29 +51,17 @@ namespace ToDoClient.Infrastructure
         {
             List<ToDoItemViewModel> existItems;
 
-            this._readerWriterLock.EnterWriteLock();
+            this.readerWriterLock.EnterWriteLock();
             try
             {
-                existItems = this._items;
-                this._items = loadItems.ToList();
+                existItems = this.items;
+                this.items = loadItems.ToList();
             }
             finally
             {
-                this._readerWriterLock.ExitWriteLock();
+                this.readerWriterLock.ExitWriteLock();
             }
 
-            this._readerWriterLock.EnterReadLock();
-            try
-            {
-                if (this._items.Count > 0)
-                {
-                    this._lastId = this._items.Max(x => x.ToDoId);
-                }
-            }
-            finally
-            {
-                this._readerWriterLock.ExitReadLock();
-            }
             if (existItems == null) return;
             foreach (var existItem in existItems)
             {
@@ -87,16 +75,15 @@ namespace ToDoClient.Infrastructure
         /// <param name="item">The todo to add.</param>
         public void Add(ToDoItemViewModel item)
         {
-            this._readerWriterLock.EnterWriteLock();
+            this.readerWriterLock.EnterWriteLock();
             try
             {
-                this._lastId++;
-                item.ToDoId = this._lastId;
-                this._items.Add(item);
+                item.ToDoId = this.tempId--;
+                this.items.Add(item);
             }
             finally
             {
-                this._readerWriterLock.ExitWriteLock();
+                this.readerWriterLock.ExitWriteLock();
             }
         }
 
@@ -106,14 +93,14 @@ namespace ToDoClient.Infrastructure
         /// <param name="id">The todo ID to delete.</param>
         public void Delete(int id)
         {
-            this._readerWriterLock.EnterWriteLock();
+            this.readerWriterLock.EnterWriteLock();
             try
             {
-                this._items.RemoveAll(x => x.ToDoId == id);
+                this.items.RemoveAll(x => x.ToDoId == id);
             }
             finally
             {
-                this._readerWriterLock.ExitWriteLock();
+                this.readerWriterLock.ExitWriteLock();
             }
         }
 
@@ -123,16 +110,16 @@ namespace ToDoClient.Infrastructure
         /// <param name="item">The todo to update.</param>
         public void Update(ToDoItemViewModel item)
         {
-            this._readerWriterLock.EnterWriteLock();
+            this.readerWriterLock.EnterWriteLock();
             try
             {
-                var toBeEdited = this._items.Find(x => x.ToDoId == item.ToDoId);
+                var toBeEdited = this.items.Find(x => x.ToDoId == item.ToDoId);
                 toBeEdited.IsCompleted = item.IsCompleted;
                 toBeEdited.Name = item.Name;
             }
             finally
             {
-                this._readerWriterLock.ExitWriteLock();
+                this.readerWriterLock.ExitWriteLock();
             }
         }
     }

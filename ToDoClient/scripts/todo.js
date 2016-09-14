@@ -9,7 +9,7 @@
         var tr = $("<tr data-id='" + obj.ToDoId + "'></tr>");
         tr.append("<td><input type='checkbox' class='completed' " + (obj.IsCompleted ? "checked" : "") + "/></td>");
         tr.append("<td class='name' >" + obj.Name + "</td>");
-        tr.append("<td><button class='delete'>Delete</button></td>");
+        tr.append("<td><button class='delete'>Delete</button></td>");       
         $(parentSelector).append(tr);
     }
 
@@ -68,10 +68,17 @@
     // starts deleting a task on the server.
     // @taskId: id of the task to delete.
     // @return a promise.
-    var deleteTask = function (taskId) {
-        return $.ajax({
-            url: "/api/todos/" + taskId,
-            type: "DELETE"
+    var deleteTask = function (id, isCompleted, name) {
+        return $.ajax(
+        {
+            url: "/api/todos",
+            type: "DELETE",
+            contentType: "application/json",
+            data: JSON.stringify({
+                ToDoId: id,
+                IsCompleted: isCompleted,
+                Name: name
+            })
         });
     };
 
@@ -103,8 +110,6 @@ $(function () {
     var $nameInput = $("#newName");
     var $todosTable = $("#tasks > tbody");
     var $syncButton = $("#sync");
-    var $counter = $(".global-container p");
-    var commandsCounter = 0;
 
     // add new task button click handler
     $createButton.click(function () {
@@ -114,8 +119,6 @@ $(function () {
             .then(tasksManager.loadTasks)
             .done(function(tasks) {
                 tasksManager.displayTasks("#tasks > tbody", tasks);
-                commandsCounter++;
-                $counter.text("unsynced changes: " + commandsCounter);
             });
     });
 
@@ -130,20 +133,20 @@ $(function () {
             .then(tasksManager.loadTasks)
             .done(function (tasks) {
                 tasksManager.displayTasks("#tasks > tbody", tasks);
-                commandsCounter++;
-                $counter.text("unsynced changes: " + commandsCounter);
             });
     });
 
     // bind delete button click for future rows
     $todosTable.on("click", ".delete", function () {
-        var taskId = $(this).parent().parent().attr("data-id");
-        tasksManager.deleteTask(taskId)
+        var tr = $(this).parent().parent();
+        var taskId = tr.attr("data-id");
+        var isCompleted = tr.find(".completed")[0].checked;
+        var name = tr.find(".name").text();
+
+        tasksManager.deleteTask(taskId, isCompleted, name)
             .then(tasksManager.loadTasks)
             .done(function(tasks) {
                 tasksManager.displayTasks("#tasks > tbody", tasks);
-                commandsCounter++;
-                $counter.text("unsynced changes: " + commandsCounter);
             });
     });
 
@@ -153,8 +156,6 @@ $(function () {
                 $("#waitSyncing").fadeOut();
                 $("#sync").text("Synchronize");
                 $syncButton.prop("disabled", false);
-                commandsCounter = 0;
-                $counter.text("unsynced changes: 0");
             });
     });
 

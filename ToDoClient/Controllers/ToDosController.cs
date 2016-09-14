@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Web.Http;
 using ToDoClient.Infrastructure;
 using ToDoClient.Models;
@@ -34,9 +35,9 @@ namespace ToDoClient.Controllers
         ///  Processes request of removing the specified todo-item.
         /// </summary>
         /// <param name="id">The todo item identifier.</param>
-        public void Delete(int id)
+        public void Delete(ToDoItemViewModel todo)
         {
-            localService.DeleteToDo(id);
+            localService.DeleteToDo(todo);
         }
 
         /// <summary>

@@ -53,10 +53,11 @@ namespace ToDoClient.Infrastructure
             commands.Add(item, Operation.Update);
         }
 
-        public void DeleteToDo(int id)
+        public void DeleteToDo(ToDoItemViewModel item)
         {
-            items.Delete(id);
-            commands.Add(new ToDoItemViewModel() { ToDoId = id }, Operation.Delete);
+            item.UserId = userService.GetOrCreateUser();
+            items.Delete(item.ToDoId);
+            commands.Add(item, Operation.Delete);
         }
 
         public void SynchronizeWithRemoteStorage()
@@ -64,7 +65,13 @@ namespace ToDoClient.Infrastructure
             if (commands.IsNotEmpty())
             {
                 commands.Sync(todoService);
+                items.Load(todoService.GetItems(userService.GetOrCreateUser()).ToList());
             }
+        }
+
+        public int GetNumberOfUnsyncedCommands()
+        {
+            return commands.GetNumberOfUnsyncedCommands();
         }
     }
 }
