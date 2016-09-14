@@ -1,5 +1,7 @@
 ﻿var tasksManager = function() {
 
+    var isFirstLoad = true;
+
     // appends a row to the tasks table.
     // @parentSelector: selector to append a row to.
     // @obj: task object to append.
@@ -14,16 +16,21 @@
     // adds all tasks as rows (deletes all rows before).
     // @parentSelector: selector to append a row to.
     // @tasks: array of tasks to append.
-    var displayTasks = function(parentSelector, tasks) {
+    var displayTasks = function (parentSelector, tasks) {
         $(parentSelector).empty();
         $.each(tasks, function(i, item) {
             appendRow(parentSelector, item);
         });
+        $(".waiting").fadeOut();
     };
 
     // starts loading tasks from server.
     // @returns a promise.
-    var loadTasks = function() {
+    var loadTasks = function () {
+        if (isFirstLoad) {
+            $(".waiting").fadeIn();
+            isFirstLoad = false;
+        }
         return $.getJSON("/api/todos");
     };
 
@@ -130,7 +137,7 @@ $(function () {
 
     // load all tasks on startup
     tasksManager.loadTasks()
-        .done(function(tasks) {
-            tasksManager.displayTasks("#tasks > tbody", tasks);
+        .done(function (tasks) {
+            tasksManager.displayTasks("#tasks > tbody", tasks); 
         });
 });

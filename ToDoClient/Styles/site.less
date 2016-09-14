@@ -7,7 +7,7 @@ html {
 }
 
 body {
-     background-image: url("../images/bg-top.jpg");
+     background-image: url("../img/bg-top.jpg");
 }
 
 .global-container {
@@ -31,6 +31,7 @@ body {
 
     .content-container {
         .set-div-parameters(1000px, auto, 7% auto, 20px);
+        background-color: 	rgba(224, 194, 133, 0.4);
         border-radius: 7px;
         border: 3px solid @color-content-bg;
         box-shadow: 0 0 10px 5px rgba(221, 221, 221, 1);
@@ -38,6 +39,15 @@ body {
         h4 {
             margin: 0 0 10px 0;
         } 
+
+        .waiting {
+            position: fixed;
+            top: 40%;
+            left: 45%;
+            width: 220px;
+            margin: 0 auto;
+            display: none;
+        }
     }
 
     .content-box {

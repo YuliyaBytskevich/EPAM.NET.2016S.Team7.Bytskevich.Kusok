@@ -30,6 +30,7 @@ namespace ToDoClient.Controllers
             {
                 CallsSwitcher.IsFirstCallToGet = false;
                 localCollection.Load(todoService.GetItems(userId).ToList());
+                operationsCollection.LoadCommandsFromLocalFile();
             }
             return localCollection.GetAll();
         }

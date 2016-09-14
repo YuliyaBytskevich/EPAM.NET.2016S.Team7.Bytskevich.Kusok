@@ -20,6 +20,12 @@ namespace ToDoClient.Infrastructure
             return _instance ?? (_instance = new ToDosCollection());
         }
 
+        private ToDosCollection()
+        {
+            _items = new List<ToDoItemViewModel>();
+            _lastId = 0;
+        }
+
         /// <summary>
         /// Gets all todos.
         /// </summary>
@@ -68,7 +74,7 @@ namespace ToDoClient.Infrastructure
             {
                 this._readerWriterLock.ExitReadLock();
             }
-
+            if (existItems == null) return;
             foreach (var existItem in existItems)
             {
                 this.Add(existItem);

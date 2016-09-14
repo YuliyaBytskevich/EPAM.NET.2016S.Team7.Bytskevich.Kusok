@@ -15,6 +15,7 @@ namespace ToDoClient.Infrastructure
     public class OperationsCollection
     {
         private List<ToDoOperation> _items;
+        private List<ToDoOperation> _actualCopy;
         private static OperationsCollection _instance;
         private readonly string _fileName;
         private readonly XmlSerializer _formatter = new XmlSerializer(typeof(List<ToDoOperation>));
@@ -84,8 +85,8 @@ namespace ToDoClient.Infrastructure
             this._readerWriterLock.EnterWriteLock();
             try
             {
-                var actual = _items.Except(new List<ToDoOperation>() { command });
-                RefreshLocalFile(actual.ToList());
+                _actualCopy = _actualCopy.Except(new List<ToDoOperation>() { command }).ToList();
+                RefreshLocalFile(_actualCopy);
             }
             finally
             {
@@ -99,6 +100,9 @@ namespace ToDoClient.Infrastructure
         /// <param name="remote">Service that processes requests to a remote cloud.</param>
         public void Sync(ToDoService remote)
         {
+            var temp = new ToDoOperation[_items.Count];
+            _items.CopyTo(temp);
+            _actualCopy = temp.ToList();
             foreach (var command in _items)
             {
                 switch (command.Operation)
@@ -115,18 +119,12 @@ namespace ToDoClient.Infrastructure
                 }
                 RemoveCommandFromFile(command);
             }
-            var commandsInFile = File.ReadAllText(_fileName);
-            if (!string.IsNullOrEmpty(commandsInFile))
-            {
-                LoadCommandsFromLocalFile();
-            }
         }
 
         public bool IsNotEmpty()
         {
             return _items.Any();
         }
-
 
         /// <summary>
         /// Refreshes the local file according to actual operations collection state
@@ -147,9 +145,12 @@ namespace ToDoClient.Infrastructure
             this._readerWriterLock.EnterWriteLock();
             try
             {
-                using (Stream s = new FileStream(this._fileName, FileMode.Open))
+                if (File.Exists(_fileName))
                 {
-                    this._items = (List<ToDoOperation>)this._formatter.Deserialize(s);
+                    using (Stream s = new FileStream(this._fileName, FileMode.Open))
+                    {
+                        this._items = (List<ToDoOperation>) this._formatter.Deserialize(s);
+                    }
                 }
             }
             finally
