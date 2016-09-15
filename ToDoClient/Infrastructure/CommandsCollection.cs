@@ -178,6 +178,12 @@ namespace ToDoClient.Infrastructure
             return commands.Any();
         }
 
+        public List<Command> GetCollection()
+        {
+            // should  be incapsulated or should return copy
+            return commands;
+        } 
+
         /// <summary>
         /// Refreshes the local file according to actual operations collection state
         /// </summary>

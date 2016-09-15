@@ -78,7 +78,7 @@ namespace ToDoClient.Infrastructure
             this.readerWriterLock.EnterWriteLock();
             try
             {
-                item.ToDoId = this.tempId--;
+                item.ToDoId = --tempId;
                 this.items.Add(item);
             }
             finally
@@ -122,5 +122,24 @@ namespace ToDoClient.Infrastructure
                 this.readerWriterLock.ExitWriteLock();
             }
         }
+
+        public void RestoreToDosFromSavedCommands(List<Command> commands)
+        {
+            foreach (var command in commands)
+            {
+                items.Add(new ToDoItemViewModel
+                {
+                    ToDoId = command.Item.ToDoId,
+                    UserId = command.Item.UserId,
+                    IsCompleted = command.Item.IsCompleted,
+                    Name = command.Item.Name
+                });
+                if (command.Item.ToDoId < tempId)
+                {
+                    tempId = command.Item.ToDoId - 1;
+                }
+            }
+        }
+
     }
 }

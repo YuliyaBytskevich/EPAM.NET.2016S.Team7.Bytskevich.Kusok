@@ -35,6 +35,10 @@ namespace ToDoClient.Infrastructure
                 IsFirstCall = false;
                 items.Load(todoService.GetItems(userId).ToList());
                 commands.LoadCommandsFromLocalFile();
+                if (commands.IsNotEmpty())
+                {
+                    items.RestoreToDosFromSavedCommands(commands.GetCollection());
+                }
             }
             return items.GetAll();
         }
