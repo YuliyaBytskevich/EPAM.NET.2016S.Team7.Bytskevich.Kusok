@@ -26,8 +26,8 @@ namespace ToDoClient.Infrastructure
         private CommandsCollection()
         {
             commands = new List<Command>();
-            fileName = "E:/operations.xml"; // ACHTUNG! HARDCODE'S HERE!
-            tempFileName = "E:/operations_temp.xml"; // ACHTUNG! HARDCODE'S HERE!
+            fileName = ConfigurationManager.AppSettings["filePath"]; 
+            tempFileName = ConfigurationManager.AppSettings["tempFilePath"];
         }
 
         public static CommandsCollection GetInstance()
@@ -55,11 +55,8 @@ namespace ToDoClient.Infrastructure
                             : new Command() {Item = item, Operation = Operation.Update});
                         break;
                     case Operation.Delete:
-                        int countRemovedItems = this.commands.RemoveAll(x => x.Item.ToDoId == item.ToDoId); 
-                        if (countRemovedItems == 0)
-                        {
-                            commands.Add(new Command() { Item = item, Operation = Operation.Delete });
-                        }
+                        commands.RemoveAll(x => x.Item.ToDoId == item.ToDoId); 
+                        commands.Add(new Command() { Item = item, Operation = Operation.Delete });
                         break;
                     default:
                         commands.Add(new Command() { Item = item, Operation = operation });

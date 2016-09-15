@@ -17,6 +17,7 @@ namespace ToDoClient.Infrastructure
 
         private readonly UserService userService = new UserService();
         private readonly ToDoService todoService = new ToDoService();
+
         private readonly ToDosCollection items = ToDosCollection.GetInstance();
         private readonly CommandsCollection commands = CommandsCollection.GetInstance();
 
